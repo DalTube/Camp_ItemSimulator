@@ -5,6 +5,7 @@
   "repository": "https://github.com/DalTube/Camp_ItemSimulator.git",
   "author": "EuiJoong <euijki87@gmail.com>",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "format": "prettier --write *.js **/*.js",
     "start": "npm src/app.js",
