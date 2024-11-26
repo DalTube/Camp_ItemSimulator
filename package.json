@@ -1,0 +1,29 @@
+{
+  "name": "Camp_ItemSimulator",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/DalTube/Camp_ItemSimulator.git",
+  "author": "EuiJoong <euijki87@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "format": "prettier --write *.js **/*.js",
+    "start": "npm src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.21.1",
+    "express-mysql-session": "^3.0.3",
+    "express-session": "^1.18.1",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.4",
+    "nodemon": "^3.1.7",
+    "prisma": "^5.22.0",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.0"
+  }
+}
