@@ -35,9 +35,7 @@ router.post('/account', async (req, res, next) => {
 
     // 4. 비밀번호 암호화 처리
     const hashPassword = await bcrypt.hash(userPw, 10);
-    console.log('######');
-    console.log(userPw);
-    console.log(hashPassword);
+
     // 5. 저장
     const save = await prisma.account.create({
       data: {
@@ -57,10 +55,28 @@ router.post('/account', async (req, res, next) => {
  * 로그인
  */
 
-router.post('/login');
+router.post('/login', async (req, res, next) => {
+  const { userId, userPw } = req.body;
 
-/***
- *
- */
+  // 1. 입력 값 체크
+  if (!userId) return res.status(401).json({ errorMessage: '아이디는 필수 입력 입니다.' });
+  if (!userPw) return res.status(401).json({ errorMessage: '비밀번호는 필수 입력 입니다.' });
+
+  // 2. 데이터 조회
+  const user = await prisma.account.findFirst({
+    where: {
+      userId,
+    },
+  });
+
+  // 3. 아이디가 존재하지 않는 경우
+  if (!user) return res.status(401).json({ errorMessage: '존재하지 않는 아이디 입니다.' });
+  // 4. 아이디는 존재하는데 비밀번호가 틀리는 경우
+  const hashPassword = await bcrypt.hash(userPw, 10);
+
+  if (userPw === user.userPw) return res.status(401).json({ errorMessage: '비밀번호가 틀립니다.' });
+
+  //로그인 성공 시, 엑세스 토큰을 생성하여 반환합니다. Payload는 로그인 한 계정의 ID를 담고 있어야겠죠?
+});
 
 export default router;
