@@ -9,6 +9,7 @@ const router = express.Router();
  */
 router.post('/character', authMiddleware, async (req, res, next) => {
   const { characterName } = req.body;
+  const { accountId } = req.user;
 
   try {
     // 1. 입력 값 체크
@@ -26,7 +27,7 @@ router.post('/character', authMiddleware, async (req, res, next) => {
     // 3. 캐릭터 정보 테이블 생성
     const characterInfo = await prisma.character.create({
       data: {
-        accountId: 1,
+        accountId: +accountId,
         characterName,
         health: 500,
         power: 100,
@@ -82,21 +83,20 @@ router.delete('/character/:characterId', authMiddleware, async (req, res, next) 
  * 캐릭터 조회
  */
 
-router.get('/charachter/:characterId', async (req, res, next) => {
+router.get('/character/:characterId', authMiddleware, async (req, res, next) => {
   const { characterId } = req.params;
+  const { accountId } = req.user;
 
-  // 1. 세션 정보 확인
-
-  // 2. 캐릭터 조회
-  const characterInfo = await prisma.findFirst({
+  // 1. 캐릭터 조회
+  const character = await prisma.character.findFirst({
     where: {
-      characterId,
-    },
-    select: {
-      characterName: true,
-      health: true,
-      power: true,
+      characterId: +characterId,
     },
   });
+  if (!character) return res.status(404).json({ errorMessage: '존재하지 않는 캐릭터 입니다.' });
+
+  // 2. 나의 캐릭터인지 아닌지에 따른 분기
+  if (+accountId !== character.accountId) return res.status(200).json({ name: character.characterName, health: character.health, power: character.power });
+  else return res.status(200).json({ name: character.characterName, health: character.health, power: character.power, money: character.money });
 });
 export default router;
