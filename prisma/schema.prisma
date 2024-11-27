@@ -45,9 +45,10 @@ model Account {
   }
 
   model Item {
-    itemCode      Int       @id @default(autoincrement()) @map("item_code")
+    itemId        Int       @id @default(autoincrement()) @map("item_id")
+    itemCode      Int       @unique @map("item_code")
     itemType      Int       @map("item_type")
-    itemName      String    @unique @map("item_name")
+    itemName      String    @map("item_name")
     itemPrice     Int       @map("item_price")
     health        Int       @map("health")
     power         Int       @map("power")
@@ -62,14 +63,14 @@ model Account {
   model Inventory {
     inventory     Int       @id @default(autoincrement()) @map("inventory_id")
     characterId   Int       @map("character_id")
-    itemCode      Int       @map("item_code")
+    itemId        Int       @map("item_id")
     health        Int       @map("health")
     power         Int       @map("power")
     createDt      DateTime  @default(now()) @map("create_dt")
     updateDt      DateTime  @updatedAt @map("update_dt")
 
     character Character  @relation(fields: [characterId], references: [characterId], onDelete: Cascade)
-    item      Item       @relation(fields: [itemCode], references: [itemCode], onDelete: Cascade)
+    item      Item       @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
 
     @@map("Inventory")
   }
