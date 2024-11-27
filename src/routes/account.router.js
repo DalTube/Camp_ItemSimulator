@@ -71,12 +71,13 @@ router.post('/login', async (req, res, next) => {
 
   // 3. 아이디가 존재하지 않는 경우
   if (!user) return res.status(401).json({ errorMessage: '존재하지 않는 아이디 입니다.' });
+
   // 4. 아이디는 존재하는데 비밀번호가 틀리는 경우
-  const hashPassword = await bcrypt.hash(userPw, 10);
+  if (!(await bcrypt.compare(userPw, user.userPw))) return res.status(401).json({ errorMessage: '비밀번호가 틀립니다.' });
 
-  if (userPw === user.userPw) return res.status(401).json({ errorMessage: '비밀번호가 틀립니다.' });
+  // 5. 로그인 성공 시, 엑세스 토큰을 생성하여 반환합니다. Payload는 로그인 한 계정의 ID를 담고 있어야겠죠?
 
-  //로그인 성공 시, 엑세스 토큰을 생성하여 반환합니다. Payload는 로그인 한 계정의 ID를 담고 있어야겠죠?
+  return res.status(200).json('로그인 성공');
 });
 
 export default router;
