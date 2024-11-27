@@ -12,3 +12,81 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+model Account {
+    accountId Int      @id @default(autoincrement()) @map("account_id")
+    userId    String   @unique @map("user_id")
+    userPw    String   @map("user_pw")
+    createDt DateTime  @default(now()) @map("create_dt")
+    updateDt DateTime  @updatedAt @map("update_dt")
+  
+    Character  Character[] // 계정(Account) 테이블과 캐릭터(Character) 테이블이 1:N 관계를 맺습니다.
+  
+    @@map("Account")
+  }
+
+  model Character {
+    characterId   Int      @id @default(autoincrement()) @map("character_id")
+    accountId     Int      @map("account_id") //Account 테이블 외래키
+    characterName String   @unique @map("character_name")
+    health        Int      @map("health")
+    power         Int      @map("power")
+    money         Int      @map("money")
+    createDt      DateTime @default(now()) @map("create_dt")
+    updateDt      DateTime @updatedAt @map("update_dt")
+
+    // Account 테이블과 관계를 설정
+    account     Account    @relation(fields: [accountId], references: [accountId], onDelete: Cascade)
+
+    Inventory  Inventory[] // 캐릭터(Character) 테이블과 인벤토리(Inventory) 테이블이 1:N 관계를 맺습니다.
+    Equipped  Equipped? // 캐릭터(Character) 테이블과 장착(Equiped) 테이블이 1:N 관계를 맺습니다.
+  
+    @@map("Character")
+  }
+
+  model Item {
+    itemCode      Int       @id @default(autoincrement()) @map("item_code")
+    itemType      Int       @map("item_type")
+    itemName      String    @unique @map("item_name")
+    itemPrice     Int       @map("item_price")
+    health        Int       @map("health")
+    power         Int       @map("power")
+    createDt      DateTime  @default(now()) @map("create_dt")
+    updateDt      DateTime  @updatedAt @map("update_dt")
+  
+    Inventory  Inventory[] // 캐릭터(Character) 테이블과 인벤토리(Inventory) 테이블이 1:N 관계를 맺습니다.
+  
+    @@map("Item")
+  }
+
+  model Inventory {
+    inventory     Int       @id @default(autoincrement()) @map("inventory_id")
+    characterId   Int       @map("character_id")
+    itemCode      Int       @map("item_code")
+    health        Int       @map("health")
+    power         Int       @map("power")
+    createDt      DateTime  @default(now()) @map("create_dt")
+    updateDt      DateTime  @updatedAt @map("update_dt")
+
+    character Character  @relation(fields: [characterId], references: [characterId], onDelete: Cascade)
+    item      Item       @relation(fields: [itemCode], references: [itemCode], onDelete: Cascade)
+
+    @@map("Inventory")
+  }
+
+  model Equipped {
+    EquippedId     Int       @id @default(autoincrement()) @map("item_code")
+    characterId    Int       @unique @map("character_id")
+    weapon         String?   @map("weapon")
+    head           String?   @map("head")
+    body           String?   @map("body")
+    shoes          String?   @map("shoes")
+    accessoryLeft  String?   @map("accessory_left")
+    accessoryRight String?   @map("accessory_right")
+    createDt       DateTime  @default(now()) @map("create_dt")
+    updateDt       DateTime  @updatedAt @map("update_dt")
+
+    character  Character   @relation(fields: [characterId], references: [characterId], onDelete: Cascade)
+
+    @@map("Equipped")
+  }
