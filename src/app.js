@@ -5,6 +5,7 @@ import expressMySQLSession from 'express-mysql-session';
 import dotenv from 'dotenv';
 import AccountRouter from './routes/account.router.js';
 import ItemRouter from './routes/item.router.js';
+import errHandlerMiddleware from './middlewares/error.middleware.js';
 
 // 1. express 연결
 const app = express();
@@ -24,7 +25,6 @@ const sessionStore = new MySQLStore({
 
 // 3. Middleware 추가
 app.use(express.json());
-//쿠키 넣어야함
 app.use(
   expressSession({
     secret: process.env.SESSION_SECRET_KEY, // 세션을 암호화하는 비밀 키를 설정
@@ -47,3 +47,4 @@ app.listen(PORT, () => {
 });
 
 // 6. Error Handler Middleware 추가
+app.use(errHandlerMiddleware());

@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "format": "prettier --write *.js **/*.js",
-    "start": "npm src/app.js",
+    "start": "node src/app.js",
     "dev": "nodemon src/app.js"
   },
   "dependencies": {
