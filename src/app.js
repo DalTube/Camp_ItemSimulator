@@ -47,4 +47,4 @@ app.listen(PORT, () => {
 });
 
 // 6. Error Handler Middleware 추가
-app.use(errHandlerMiddleware());
+app.use(errHandlerMiddleware);
