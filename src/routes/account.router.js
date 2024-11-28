@@ -8,9 +8,8 @@ dotenv.config();
 const router = express.Router();
 
 /***
- * 회원가입
+ * 회원가입 API
  */
-
 router.post('/account', async (req, res, next) => {
   try {
     // 1. 입력 갑 받아오기
@@ -55,9 +54,8 @@ router.post('/account', async (req, res, next) => {
 });
 
 /***
- * 로그인
+ * 로그인 API
  */
-
 router.post('/login', async (req, res, next) => {
   try {
     const { userId, userPw } = req.body;

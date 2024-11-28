@@ -1,6 +1,7 @@
 import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
+import Prisma from '@prisma/client';
 
 const router = express.Router();
 
@@ -22,23 +23,30 @@ router.post('/character', authMiddleware, async (req, res, next) => {
 
     if (character) return res.status(401).json({ message: '이미 존재하는 캐릭터 명 입니다.' });
 
-    // 3. 캐릭터 정보 테이블 생성
-    const characterInfo = await prisma.character.create({
-      data: {
-        accountId: +accountId,
-        characterName,
-        health: 500,
-        power: 100,
-        money: 10000,
-      },
-    });
+    await prisma.$transaction(
+      async (tx) => {
+        // 3. 캐릭터 정보 테이블 생성
+        const characterInfo = await tx.character.create({
+          data: {
+            accountId: +accountId,
+            characterName,
+            health: 500,
+            power: 100,
+            money: 10000,
+          },
+        });
 
-    // 4. 장비 장착 테이블 생성
-    await prisma.equipped.create({
-      data: {
-        characterId: characterInfo.characterId,
+        // 4. 장비 장착 테이블 생성
+        await tx.equipped.create({
+          data: {
+            characterId: characterInfo.characterId,
+          },
+        });
       },
-    });
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+      },
+    );
 
     return res.status(200).json({ message: '캐릭터 생성 성공' });
   } catch (error) {
@@ -51,6 +59,9 @@ router.delete('/character/:characterId', authMiddleware, async (req, res, next) 
   try {
     const { characterId } = req.params;
     const { accountId } = req.user;
+
+    const regix = /^[0-9]+$/;
+    if (!regix.test(characterId)) return res.status(400).json({ message: '잘못된 캐릭터 정보 입니다.' });
 
     // 1. 삭제 대상 캐릭터 조회
     const character = await prisma.character.findFirst({
@@ -85,6 +96,9 @@ router.get('/character/:characterId', authMiddleware, async (req, res, next) => 
     const { characterId } = req.params;
     const { accountId } = req.user;
 
+    const regix = /^[0-9]+$/;
+    if (!regix.test(characterId)) return res.status(400).json({ message: '잘못된 캐릭터 정보 입니다.' });
+
     // 1. 캐릭터 조회
     const character = await prisma.character.findFirst({
       where: {
@@ -112,7 +126,7 @@ router.get('/character/:characterId/inventory', authMiddleware, async (req, res,
     if (!regix.test(characterId)) return res.status(400).json({ message: '잘못된 캐릭터 정보 입니다.' });
 
     // 캐릭터 존재 여부
-    const character = await prisma.character.findFirst({ where: { characterId: +characterId, accountId } });
+    const character = await prisma.character.findFirst({ where: { characterId: +characterId } });
     if (!character) return res.status(404).json({ message: '캐릭터가 존재하지 않습니다.' });
 
     // 계정 내 캐릭터인지 체크
@@ -139,4 +153,5 @@ router.get('/character/:characterId/inventory', authMiddleware, async (req, res,
     next(error);
   }
 });
+
 export default router;

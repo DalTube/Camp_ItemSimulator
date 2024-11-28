@@ -11,7 +11,6 @@ router.post('/npc/:characterId', authMiddleware, async (req, res, next) => {
     const { characterId } = req.params;
     const { itemCode, count } = req.body;
 
-    console.log(count);
     // 1. 입력 값 체크
     if (!itemCode) return res.status(400).json({ message: '구매할 아이템을 선택하지 않았습니다.' });
     if (count === 0) return res.status(400).json({ message: '구매 수량은 1 이상이어야 합니다. ' });
@@ -20,6 +19,9 @@ router.post('/npc/:characterId', authMiddleware, async (req, res, next) => {
     const buyConut = count ? +count : 1;
 
     // 2. 캐릭터 정보 조회
+    const regix = /^[0-9]+$/;
+    if (!regix.test(characterId)) return res.status(400).json({ message: '잘못된 캐릭터 정보 입니다.' });
+
     const character = await prisma.character.findFirst({ where: { characterId: +characterId } });
     if (!character) return res.status(404).json({ message: '해당 캐릭터는 존재하지 않습니다.' });
 
@@ -93,6 +95,9 @@ router.delete('/npc/:characterId', authMiddleware, async (req, res, next) => {
     // 1. 입력 값 체크
     if (!itemCode) return res.status(400).json({ message: '구매할 아이템을 선택하지 않았습니다.' });
     if (count === 0) return res.status(400).json({ message: '판매 수량은 1 이상이어야 합니다. ' });
+
+    const regix = /^[0-9]+$/;
+    if (!regix.test(characterId)) return res.status(400).json({ message: '잘못된 캐릭터 정보 입니다.' });
 
     // 1-2. 판매수량 정보 없으면 무조건 1로 처리
     const sellConut = count ? count : 1;
