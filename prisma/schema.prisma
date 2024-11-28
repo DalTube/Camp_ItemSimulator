@@ -74,16 +74,22 @@ model Account {
   }
 
   model Equipped {
-    EquippedId     Int       @id @default(autoincrement()) @map("item_code")
-    characterId    Int       @unique @map("character_id")
-    weapon         String?   @map("weapon")
-    head           String?   @map("head")
-    body           String?   @map("body")
-    shoes          String?   @map("shoes")
-    accessoryLeft  String?   @map("accessory_left")
-    accessoryRight String?   @map("accessory_right")
-    createDt       DateTime  @default(now()) @map("create_dt")
-    updateDt       DateTime  @updatedAt @map("update_dt")
+    equippedId          Int       @id @default(autoincrement()) @map("equipped_id")
+    characterId         Int       @unique @map("character_id")
+    weaponCode          String?   @map("weapon_code")
+    weaponName          String?   @map("weapon_name")
+    headCode            String?   @map("head_code")
+    headName            String?   @map("head_name")
+    bodyCode            String?   @map("body_code")
+    bodyName            String?   @map("body_name")
+    shoesCode           String?   @map("shoes_code")
+    shoesName           String?   @map("shoes_name")
+    accessoryLeftCode   String?   @map("accessory_left_code")
+    accessoryLeftName   String?   @map("accessory_left_name")
+    accessoryRightCode  String?   @map("accessory_right_code")
+    accessoryRightName  String?   @map("accessory_right_name")
+    createDt            DateTime  @default(now()) @map("create_dt")
+    updateDt            DateTime  @updatedAt @map("update_dt")
 
     character  Character   @relation(fields: [characterId], references: [characterId], onDelete: Cascade)
 
