@@ -9,8 +9,9 @@ router.post('/item', async (req, res, next) => {
     const { itemCode, itemType, itemName, itemStatus, itemPrice } = req.body;
 
     // 1. 입력 값 체크
+    if (!itemType && itemType !== 0) return res.status(400).json({ message: '아이템 유형은 필수 입력 입니다.' });
     if (!itemCode) return res.status(400).json({ message: '아이템 코드은 필수 입력 입니다.' });
-    if (!itemType) return res.status(400).json({ message: '아이템 유형은 필수 입력 입니다.' });
+
     // 0:일반 1:무기 2:머리 3:몸 4:신발 5:악세
     if (itemType > 6) return res.status(400).json({ message: '아이템 유형의 유효 값은 0 ~ 5 입니다.' });
     if (!itemName) return res.status(400).json({ message: '아이템 이름은 필수 입력 입니다.' });

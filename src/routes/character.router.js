@@ -4,9 +4,7 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-/***
- * 캐릭터 생성
- */
+/**** 캐릭터 생성 API */
 router.post('/character', authMiddleware, async (req, res, next) => {
   const { characterName } = req.body;
   const { accountId } = req.user;
@@ -48,9 +46,7 @@ router.post('/character', authMiddleware, async (req, res, next) => {
   }
 });
 
-/***
- * 캐릭터 삭제
- */
+/**** 캐릭터 삭제 API */
 router.delete('/character/:characterId', authMiddleware, async (req, res, next) => {
   try {
     const { characterId } = req.params;
@@ -83,10 +79,7 @@ router.delete('/character/:characterId', authMiddleware, async (req, res, next) 
   }
 });
 
-/***
- * 캐릭터 조회
- */
-
+/**** 캐릭터 조회 API */
 router.get('/character/:characterId', authMiddleware, async (req, res, next) => {
   try {
     const { characterId } = req.params;

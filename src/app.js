@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import AccountRouter from './routes/account.router.js';
 import ItemRouter from './routes/item.router.js';
 import CharacterRouter from './routes/character.router.js';
+import NpcRouter from './routes/npc.router.js';
 import errHandlerMiddleware from './middlewares/error.middleware.js';
 
 // dotenv.config();
@@ -43,7 +44,7 @@ app.use(cookieParser());
 // );
 
 // 4. Router 추가
-app.use('/api', [AccountRouter, ItemRouter, CharacterRouter]);
+app.use('/api', [AccountRouter, ItemRouter, CharacterRouter, NpcRouter]);
 
 // 5. Listen
 app.listen(PORT, () => {
