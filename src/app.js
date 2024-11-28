@@ -8,6 +8,8 @@ import ItemRouter from './routes/item.router.js';
 import CharacterRouter from './routes/character.router.js';
 import NpcRouter from './routes/npc.router.js';
 import errHandlerMiddleware from './middlewares/error.middleware.js';
+import WorkRouter from './routes/work.router.js';
+import EquippedRouter from './routes/equipped.router.js';
 
 // dotenv.config();
 
@@ -44,7 +46,7 @@ app.use(cookieParser());
 // );
 
 // 4. Router 추가
-app.use('/api', [AccountRouter, ItemRouter, CharacterRouter, NpcRouter]);
+app.use('/api', [AccountRouter, ItemRouter, CharacterRouter, NpcRouter, WorkRouter, EquippedRouter]);
 
 // 5. Listen
 app.listen(PORT, () => {
