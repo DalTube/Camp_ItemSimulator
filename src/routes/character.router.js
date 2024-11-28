@@ -145,6 +145,9 @@ router.get('/character/:characterId/inventory', authMiddleware, async (req, res,
           },
         },
       },
+      orderBy: {
+        itemCode: 'asc',
+      },
     });
 
     if (!inventories) return res.status(200).json({ message: '아무것도 보유하고 있지 않습니다.' });
