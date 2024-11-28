@@ -69,4 +69,34 @@ router.patch('/item/:itemCode', async (req, res, next) => {
   }
 });
 
+/*** 아이템 목록 조회 */
+router.get('/item', async (req, res, next) => {
+  try {
+    // 1. 아이템 조회
+    const item = await prisma.item.findMany({ orderBy: { itemCode: 'asc' }, select: { itemCode: true, itemType: true, itemName: true, health: true, power: true, itemPrice: true } });
+
+    // 2. 결과 처리
+    if (!item) return res.status(200).json({ message: '생성된 아이템이 없습니다.' });
+    else return res.status(200).json(item);
+  } catch (error) {
+    next();
+  }
+});
+
+/*** 아이템 상세 조회 */
+router.get('/item/:itemCode', async (req, res, next) => {
+  try {
+    const { itemCode } = req.params;
+
+    // 1. 아이템 조회
+    const item = await prisma.item.findFirst({ where: { itemCode: +itemCode }, select: { itemCode: true, itemType: true, itemName: true, health: true, power: true, itemPrice: true } });
+
+    // 2. 결과 처리
+    if (!item) return res.status(404).json({ message: '해당 아이템이 존재하지 않습니다.' });
+    else return res.status(200).json(item);
+  } catch (error) {
+    next();
+  }
+});
+
 export default router;
