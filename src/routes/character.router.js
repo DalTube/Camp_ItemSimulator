@@ -100,4 +100,43 @@ router.get('/character/:characterId', authMiddleware, async (req, res, next) => 
     next();
   }
 });
+
+/**** 캐릭터 인벤토리 조회 API */
+router.get('/character/:characterId/inventory', authMiddleware, async (req, res, next) => {
+  try {
+    const { characterId } = req.params;
+    const { accountId } = req.user;
+
+    // characterId 정합성 체크
+    const regix = /^[0-9]+$/;
+    if (!regix.test(characterId)) return res.status(400).json({ message: '잘못된 캐릭터 정보 입니다.' });
+
+    // 캐릭터 존재 여부
+    const character = await prisma.character.findFirst({ where: { characterId: +characterId, accountId } });
+    if (!character) return res.status(404).json({ message: '캐릭터가 존재하지 않습니다.' });
+
+    // 계정 내 캐릭터인지 체크
+    if (accountId !== character.accountId) return res.status(401).json({ message: '다른 계정의 인벤토리 정보를 조회할 수 없습니다.' });
+
+    // 인벤토리 조회
+    const inventories = await prisma.inventory.findMany({
+      where: { characterId: +characterId },
+      select: {
+        itemCode: true,
+        qty: true,
+        item: {
+          select: {
+            itemCode: true,
+            itemName: true,
+          },
+        },
+      },
+    });
+
+    if (!inventories) return res.status(200).json({ message: '아무것도 보유하고 있지 않습니다.' });
+    else return res.status(200).json(inventories);
+  } catch (error) {
+    next(error);
+  }
+});
 export default router;
