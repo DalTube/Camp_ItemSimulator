@@ -43,7 +43,7 @@ router.patch('/item/:itemCode', async (req, res, next) => {
 
     // 1. 입력 값 체크
     if (!itemName && !itemStatus && !itemType) return res.status(202).json({ message: '변경할 정보가 입력되지 않았습니다.' });
-    if (!itemPrice) return res.status(400).json({ message: '아이템 가격은 변경할 수 없습니다.' });
+    if (itemPrice) return res.status(400).json({ message: '아이템 가격은 변경할 수 없습니다.' });
 
     // 2. 아이템 존재 여부 체크
     const item = await prisma.item.findFirst({ where: { itemCode: +itemCode } });
