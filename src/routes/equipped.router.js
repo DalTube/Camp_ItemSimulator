@@ -1,6 +1,7 @@
 import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
+import { Prisma } from '@prisma/client';
 
 const router = express.Router();
 
@@ -139,12 +140,11 @@ router.patch('/equipped/:characterId/puton', authMiddleware, async (req, res, ne
         break;
     }
 
-    await prisma.$transaction(async (tx) => {
-      // 장비 장착 테이블 처리
-      await tx.equipped.update({ where: { equippedId: equipped.equippedId, characterId: +characterId }, data: updateData });
+    await prisma.$transaction(
+      async (tx) => {
+        // 장비 장착 테이블 처리
+        await tx.equipped.update({ where: { equippedId: equipped.equippedId, characterId: +characterId }, data: updateData });
 
-      //캐릭터 STAT 처리
-      if (isChageEquipment) {
         //교체
         if (isChageEquipment) {
           const equippedItem = await prisma.item.findFirst({ where: { itemCode: +equippedItemCode } });
@@ -168,7 +168,7 @@ router.patch('/equipped/:characterId/puton', authMiddleware, async (req, res, ne
             await tx.inventory.update({
               where: { inventoryId: equippedInventory.inventoryId },
               data: {
-                qty: equippedInventory.qty++,
+                qty: equippedInventory.qty + 1,
               },
             });
           }
@@ -197,7 +197,7 @@ router.patch('/equipped/:characterId/puton', authMiddleware, async (req, res, ne
             await tx.inventory.update({
               where: { inventoryId: inventory.inventoryId },
               data: {
-                qty: inventory.qty--,
+                qty: inventory.qty - 1,
               },
             });
           } else {
@@ -207,8 +207,11 @@ router.patch('/equipped/:characterId/puton', authMiddleware, async (req, res, ne
             });
           }
         }
-      }
-    });
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+      },
+    );
 
     // 결과
     return res.status(201).json({ message: `${item.itemName}을 장착 하셨습니다.` });
@@ -244,45 +247,64 @@ router.patch('/equipped/:characterId/takeoff', authMiddleware, async (req, res, 
     // 계정 내 캐릭터인지 체크
     if (accountId !== character.accountId) return res.status(401).json({ message: '다른 계정의 캐릭터로 수행할 수 없습니다.' });
 
+    // 아이템 존재 여부 체크
+    const item = await prisma.item.findFirst({ where: { itemCode } });
+    if (!item) return res.status(404).json({ message: '존재하지 않는 아이템입니다.' });
+
     // 아이템 유형이 0이면 탈착x (일반 아이템은 장착 할 수 없다.)
     if (item.itemType === 0) return res.status(401).json({ message: '일반 아이템은 장착할 수 없습니다.' });
-
-    // 내 인벤토리 체크
-    // const inventory = await prisma.inventory.findFirst({ where: { itemCode, characterId: +characterId } });
-    // if (!inventory) return res.status(404).json({ message: '인벤토리에 없는 아이템입니다.' });
 
     // 장비 장착 상태 조회
     const equipped = await prisma.equipped.findFirst({ where: { characterId: +characterId } });
 
-    if (!equipped.weaponCode && +equipped.weaponCode === itemCode) await prisma.equipped.update({ where: { weaponCode: null, weaponName: null } });
-    if (!equipped.headCode && +equipped.headCode === itemCode) await prisma.equipped.update({ where: { headCode: null, headName: null } });
-    if (!equipped.bodyCode && +equipped.bodyCode === itemCode) await prisma.equipped.update({ where: { bodyCode: null, bodyName: null } });
-    if (!equipped.shoesCode && +equipped.shoesCode === itemCode) await prisma.equipped.update({ where: { shoesCode: null, shoesName: null } });
-    if (!equipped.accessoryLeftCode && +equipped.accessoryLeftCode === itemCode) await prisma.equipped.update({ where: { accessoryLeftCode: null, accessoryLeftName: null } });
-    if (!equipped.accessoryRightCode && +equipped.accessoryRightCode === itemCode) await prisma.equipped.update({ where: { accessoryRightCode: null, accessoryRightName: null } });
+    // 탈착 처리
+    if (equipped.weaponCode && +equipped.weaponCode === itemCode) await prisma.equipped.update({ where: { equippedId: equipped.equippedId }, data: { weaponCode: null, weaponName: null } });
+    if (equipped.headCode && +equipped.headCode === itemCode) await prisma.equipped.update({ where: { equippedId: equipped.equippedId }, data: { headCode: null, headName: null } });
+    if (equipped.bodyCode && +equipped.bodyCode === itemCode) await prisma.equipped.update({ where: { equippedId: equipped.equippedId }, data: { bodyCode: null, bodyName: null } });
+    if (equipped.shoesCode && +equipped.shoesCode === itemCode) await prisma.equipped.update({ where: { equippedId: equipped.equippedId }, data: { shoesCode: null, shoesName: null } });
+    if (equipped.accessoryLeftCode && +equipped.accessoryLeftCode === itemCode)
+      await prisma.equipped.update({ where: { equippedId: equipped.equippedId }, data: { accessoryLeftCode: null, accessoryLeftName: null } });
+    if (equipped.accessoryRightCode && +equipped.accessoryRightCode === itemCode)
+      await prisma.equipped.update({ where: { equippedId: equipped.equippedId }, data: { accessoryRightCode: null, accessoryRightName: null } });
+
+    prisma.$transaction(
+      async (tx) => {
+        //인벤토리 수정
+        const inventory = await tx.inventory.findFirst({ where: { itemCode, characterId: +characterId } });
+
+        if (!inventory) await tx.inventory.create({ data: { itemCode, qty: 1, characterId: +characterId } });
+        else await tx.inventory.update({ where: { inventoryId: inventory.inventoryId }, data: { qty: inventory.qty + 1 } });
+
+        // 캐릭터 능력치 수정
+        await tx.character.update({ where: { characterId: +characterId }, data: { health: character.health - item.health, power: character.power - item.power } });
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+      },
+    );
 
     // 결과
-    return res.status(201).json(await prisma.character.findFirst({ where: { characterId: +characterId, accountId }, select: { money: true } }));
+    return res.status(201).json({ message: `${item.itemName}을 탈착 하셨습니다.` });
   } catch (error) {}
 });
 
 /**** 캐릭터 장비테이블 상세 */
-// const getEquippedInfo = (characterId) => {
-//   return prisma.$queryRaw`SELECT A.equipped_id, A.character_id
-//   , A.weapon_code, B.item_name AS weapon_name
-//   , A.head_code, C.item_name AS head_name
-//   , A.body_code, D.Item_name AS body_name
-//   , A.shoes_code, E.Item_name AS shoes_name
-//   , A.accessory_left_code, F.Item_name AS accessory_left_name
-//   , A.accessory_right_code, G.Item_name AS accessory_right_name
-//   FROM Equipped A
-//   LEFT OUTER JOIN Item B ON A.weapon_code = B.item_code
-//   LEFT OUTER JOIN Item C ON A.head_code = C.item_code
-//   LEFT OUTER JOIN Item D ON A.body_code = D.item_code
-//   LEFT OUTER JOIN Item E ON A.shoes_code = E.item_code
-//   LEFT OUTER JOIN Item F ON A.accessory_left_code = F.item_code
-//   LEFT OUTER JOIN Item G ON A.accessory_right_code  = G.item_code
-//   WHERE A.character_id = ${characterId}`;
-// };
+const getEquippedInfo = (characterId) => {
+  return prisma.$queryRaw`SELECT A.equipped_id, A.character_id
+  , A.weapon_code, B.item_name AS weapon_name
+  , A.head_code, C.item_name AS head_name
+  , A.body_code, D.Item_name AS body_name
+  , A.shoes_code, E.Item_name AS shoes_name
+  , A.accessory_left_code, F.Item_name AS accessory_left_name
+  , A.accessory_right_code, G.Item_name AS accessory_right_name
+  FROM Equipped A
+  LEFT OUTER JOIN Item B ON A.weapon_code = B.item_code
+  LEFT OUTER JOIN Item C ON A.head_code = C.item_code
+  LEFT OUTER JOIN Item D ON A.body_code = D.item_code
+  LEFT OUTER JOIN Item E ON A.shoes_code = E.item_code
+  LEFT OUTER JOIN Item F ON A.accessory_left_code = F.item_code
+  LEFT OUTER JOIN Item G ON A.accessory_right_code  = G.item_code
+  WHERE A.character_id = ${characterId}`;
+};
 
 export default router;
