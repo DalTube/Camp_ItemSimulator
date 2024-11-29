@@ -1,10 +1,8 @@
 # Node.js와 Express.js를 활용한 나만의 게임 아이템 시뮬레이터 서비스 만들기 과제
-
 ---
 
 #### Todo
 ---
-
 1. 데이터베이스 모델링  
     1. 아이템 테이블
       - 아이템 생성 API를 통해 생성된 아이템 정보는 아이템 테이블에 저장
@@ -119,7 +117,7 @@ yarn add bcrypt
 ---
 
 | 기능 | API URL | Method | request(가져 갈 데이터) | response(서버로부터 받아 올 데이터) |
-|--- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- | --- |
 | 회원가입 | /api/account | POST | {"userId":"sparta1","userPw":"sparta1","userPwChk":"sparta1"} | { "accountId": 2,"userId": "sparta1","createDt": "2024-11-28T03:29:33.190Z"} |
 | 로그인 | /api/login | POST | { "userId":"sparta1",	"userPw":"sparta1"} | "로그인 성공" |
 | 캐릭터 생성 | /api/character | POST | { "characterName":"스파르타1" } | {	"message": "캐릭터 생성 성공" } |
